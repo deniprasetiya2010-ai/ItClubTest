@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super-Converter | Danzy</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .tab-content { display: none; opacity: 0; transform: translateY(8px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .tab-content.active { display: block; opacity: 1; transform: translateY(0); }
+        
+        .auth-tab { display: none; opacity: 0; transition: opacity 0.25s ease-in-out; }
+        .auth-tab.active { display: block; opacity: 1; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.4); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.8); }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float { animation: floatSlow 4s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-between p-4 md:p-8 relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+    <!-- Background Ambient Glow Effects -->
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" style="animation-duration: 6s;"></div>
+
+    <!-- Navbar / Top Bar -->
+    <nav class="w-full max-w-4xl flex justify-between items-center bg-slate-900/80 border border-slate-800 rounded-2xl px-6 py-3.5 mb-8 backdrop-blur-xl shadow-xl shadow-slate-950/50 transition-all duration-300 hover:border-slate-700">
+        <div class="flex items-center gap-3 group cursor-pointer">
+            <div class="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-cyan-500 rounded-xl flex items-center justify-center font-black text-white text-xl shadow-lg shadow-indigo-500/30 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6">
+                ⚡
+            </div>
+            <div>
+                <span class="font-extrabold text-lg text-white block leading-tight tracking-tight">SuperConverter</span>
+                <span class="text-[10px] bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent font-bold">Created by Danzy</span>
+            </div>
+        </div>
+
+        <div id="userSection">
+            <!-- Tombol jika belum login -->
+            <div id="guestButtons" class="flex items-center gap-2.5">
+                <button onclick="openAuthModal('login')" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold rounded-xl transition-all duration-200 border border-slate-700/60 active:scale-95 flex items-center gap-1.5">
+                    <i class="fa-solid fa-right-to-bracket text-indigo-400"></i> Masuk
+                </button>
+                <button onclick="openAuthModal('register')" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white text-xs font-semibold rounded-xl transition-all duration-200 shadow-md shadow-indigo-600/30 hover:shadow-indigo-500/50 active:scale-95 flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-plus"></i> Buat Akun
+                </button>
+            </div>
+            
+            <!-- Profil jika sudah login -->
+            <div id="userProfile" class="hidden flex items-center gap-3 bg-slate-800/60 border border-slate-700/60 px-3.5 py-1.5 rounded-xl">
+                <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-xs">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="text-left">
+                    <p id="profileName" class="text-xs font-bold text-slate-200 leading-tight">User</p>
+                    <span class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Sesi Aktif</span>
+                </div>
+                <button onclick="logout()" title="Keluar" class="ml-2 p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-all active:scale-90">
+                    <i class="fa-solid fa-power-off text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header & Pengembang -->
+    <header class="text-center max-w-2xl mb-8 space-y-3 animate-float">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 rounded-full text-xs font-semibold tracking-wider shadow-inner">
+            <i class="fa-solid fa-code text-indigo-400"></i> Developed by Danzy
+        </div>
+        <h1 class="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            <span class="bg-gradient-to-r from-indigo-400 via-cyan-400 to-teal-300 bg-clip-text text-transparent">Super-Converter</span>
+        </h1>
+        <p class="text-slate-400 text-sm md:text-base leading-relaxed px-4">Platform konversi digital cerdas berteknologi mutakhir untuk kebutuhan produktivitas harian Anda.</p>
+        
+        <!-- Waktu Real-Time Realisasi Widget -->
+        <div class="pt-1">
+            <div class="inline-flex items-center gap-2.5 px-4 py-1.5 bg-slate-900/90 border border-slate-800 text-cyan-400 rounded-full text-xs font-mono font-semibold shadow-md shadow-slate-950/40">
+                <i class="fa-regular fa-clock text-indigo-400 animate-pulse"></i> 
+                <span id="realtimeClockText">Memuat Waktu...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Container Utama -->
+    <main class="w-full max-w-3xl bg-slate-900/60 backdrop-blur-2xl border border-slate-800/80 rounded-3xl shadow-2xl shadow-slate-950/80 p-6 md:p-8 mb-auto relative overflow-hidden transition-all duration-300">
+        
+        <!-- LOCKED OVERLAY (Muncul jika belum login) -->
+        <div id="lockedState" class="flex flex-col items-center justify-center py-12 text-center space-y-5">
+            <div class="w-20 h-20 bg-gradient-to-tr from-indigo-600/20 to-cyan-500/20 border border-indigo-500/30 text-indigo-400 rounded-3xl flex items-center justify-center text-3xl shadow-2xl animate-bounce" style="animation-duration: 3s;">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="text-xl md:text-2xl font-bold text-white tracking-tight">Akses Fitur Terkunci</h3>
+                <p class="text-slate-400 text-xs md:text-sm max-w-md leading-relaxed">Silakan masuk atau daftar akun baru secara gratis untuk menikmati ragam fitur konverter interaktif persembahan eksklusif <b>Danzy</b>.</p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-3 pt-2">
+                <button onclick="openAuthModal('login')" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm rounded-xl transition-all duration-200 border border-slate-700 active:scale-95 shadow-md">
+                    Masuk Akun
+                </button>
+                <button onclick="openAuthModal('register')" class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 active:scale-95 flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus"></i> Buat Akun Sekarang
+                </button>
+            </div>
+        </div>
+
+        <!-- APP CONTENT (Hanya terlihat jika sudah login) -->
+        <div id="appContent" class="hidden">
+            <!-- Navigation Tabs -->
+            <div class="flex border-b border-slate-800 mb-6 gap-2 overflow-x-auto pb-2 scrollbar-none">
+                <button onclick="switchTab('gambar')" id="btn-gambar" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-image"></i> Gambar
+                </button>
+                <button onclick="switchTab('unit')" id="btn-unit" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-calculator"></i> Unit Data
+                </button>
+                <button onclick="switchTab('teks')" id="btn-teks" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-file-lines"></i> Alat Teks
+                </button>
+                <button onclick="switchTab('uang')" id="btn-uang" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-coins"></i> Mata Uang
+                </button>
+                <button onclick="switchTab('suhu')" id="btn-suhu" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-temperature-high"></i> Suhu
+                </button>
+                <button onclick="switchTab('waktu')" id="btn-waktu" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-clock"></i> Waktu
+                </button>
+                <button onclick="switchTab('wtc')" id="btn-wtc" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-globe"></i> WTC (Zona Waktu)
+                </button>
+                <button onclick="switchTab('basis')" id="btn-basis" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-binary"></i> Basis Angka
+                </button>
+                <button onclick="switchTab('fisik')" id="btn-fisik" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-ruler-combined"></i> Panjang & Berat
+                </button>
+                <button onclick="switchTab('qr')" id="btn-qr" class="tab-btn px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition-all duration-200 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode"></i> QR Code
+                </button>
+            </div>
+
+            <!-- ================= TAB GAMBAR ================= -->
+            <div id="tab-gambar" class="tab-content active space-y-6">
+                <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500/80 rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 bg-slate-950/40 hover:bg-slate-950/70 group">
+                    <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                    <label for="imageInput" class="cursor-pointer flex flex-col items-center">
+                        <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-2xl text-indigo-400 mb-3 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <span class="text-slate-200 font-semibold group-hover:text-indigo-300 transition-colors">Klik atau seret file gambar ke sini</span>
+                        <span class="text-xs text-slate-500 mt-1">Mendukung format PNG, JPG, dan WEBP berkualitas tinggi</span>
+                    </label>
+                </div>
+
+                <div id="imagePreviewContainer" class="hidden space-y-5 animate-fadeIn">
+                    <div class="flex items-center justify-between bg-slate-950/60 p-4 rounded-xl border border-slate-800">
+                        <div class="flex items-center gap-3 overflow-hidden">
+                            <div class="w-10 h-10 rounded-lg bg-indigo-600/20 flex items-center justify-center text-indigo-400 shrink-0"><i class="fa-regular fa-file-image"></i></div>
+                            <span id="fileName" class="text-sm truncate font-medium text-slate-300">filename.jpg</span>
+                        </div>
+                        <span id="fileSize" class="text-xs font-semibold px-2.5 py-1 bg-slate-800 rounded-lg text-slate-400 shrink-0">0 KB</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Format Target Tujuan</label>
+                            <select id="targetFormat" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                                <option value="image/png">PNG (Lossless)</option>
+                                <option value="image/jpeg">JPEG (Compressed)</option>
+                                <option value="image/webp">WEBP (Modern)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Tingkat Kualitas Kompresi</label>
+                            <input type="range" id="qualityRange" min="0.1" max="1" step="0.1" value="0.8" class="w-full accent-indigo-500 mt-3 cursor-pointer">
+                        </div>
+                    </div>
+
+                    <button onclick="convertImage()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bolt"></i> Proses Konversi Gambar
+                    </button>
+
+                    <div id="downloadArea" class="hidden text-center pt-2">
+                        <a id="downloadLink" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition-all duration-200 active:scale-95">
+                            <i class="fa-solid fa-download"></i> Unduh Hasil Konversi
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB UNIT DATA ================= -->
+            <div id="tab-unit" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Besar Ukuran Data</label>
+                        <input type="number" id="dataInput" value="1" min="0" oninput="convertDataSize()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Satuan Unit Asal</label>
+                        <select id="unitFrom" onchange="convertDataSize()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 transition-colors">
+                            <option value="MB">Megabyte (MB)</option>
+                            <option value="GB">Gigabyte (GB)</option>
+                            <option value="TB">Terabyte (TB)</option>
+                            <option value="KB">Kilobyte (KB)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-4">
+                    <h3 class="text-xs font-extrabold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie"></i> Hasil Konversi Setara
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Kilobyte (KB)</span>
+                            <span id="resKB" class="text-slate-100 font-bold text-base">1024</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Megabyte (MB)</span>
+                            <span id="resMB" class="text-slate-100 font-bold text-base">1</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Gigabyte (GB)</span>
+                            <span id="resGB" class="text-slate-100 font-bold text-base">0.00097</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Terabyte (TB)</span>
+                            <span id="resTB" class="text-slate-100 font-bold text-base">0.0000009</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB TEKS ================= -->
+            <div id="tab-teks" class="tab-content space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Masukkan / Tempel Teks</label>
+                    <textarea id="textInput" rows="5" oninput="analyzeText()" placeholder="Ketik kalimat atau paragraf Anda di sini..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 transition-colors leading-relaxed"></textarea>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="transformText('upper')" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl transition-all duration-150 border border-slate-700">HURUF BESAR</button>
+                    <button onclick="transformText('lower')" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl transition-all duration-150 border border-slate-700">huruf kecil</button>
+                    <button onclick="downloadTextFile()" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-xs font-bold rounded-xl transition-all duration-150 shadow-md shadow-indigo-600/30 ml-auto flex items-center gap-1.5"><i class="fa-solid fa-file-arrow-down"></i> Simpan .TXT</button>
+                </div>
+
+                <div class="flex gap-6 border-t border-slate-800 pt-4 text-xs text-slate-400 font-medium">
+                    <div class="bg-slate-950/40 px-3 py-1.5 rounded-lg border border-slate-800/60">Total Kata: <span id="wordCount" class="font-bold text-indigo-400">0</span></div>
+                    <div class="bg-slate-950/40 px-3 py-1.5 rounded-lg border border-slate-800/60">Total Karakter: <span id="charCount" class="font-bold text-cyan-400">0</span></div>
+                </div>
+            </div>
+
+            <!-- ================= TAB MATA UANG ================= -->
+            <div id="tab-uang" class="tab-content space-y-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Jumlah Nominal Uang</label>
+                        <input type="number" id="currencyAmount" value="100" min="0" oninput="convertCurrency()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xl font-extrabold text-indigo-400 focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Dari Mata Uang</label>
+                            <select id="currFrom" onchange="convertCurrency()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 transition-colors">
+                                <option value="USD">USD - Dolar Amerika</option>
+                                <option value="IDR">IDR - Rupiah Indonesia</option>
+                                <option value="EUR">EUR - Euro Eropa</option>
+                                <option value="JPY">JPY - Yen Jepang</option>
+                                <option value="SGD">SGD - Dolar Singapura</option>
+                                <option value="SAR">SAR - Riyal Arab Saudi</option>
+                            </select>
+                        </div>
+
+                        <div class="text-center pt-2">
+                            <button onclick="swapCurrency()" title="Tukar Posisi" class="p-3 bg-slate-800 hover:bg-indigo-600 text-slate-200 rounded-2xl transition-all duration-200 border border-slate-700 shadow-md active:rotate-180">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Ke Mata Uang</label>
+                            <select id="currTo" onchange="convertCurrency()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 transition-colors">
+                                <option value="IDR">IDR - Rupiah Indonesia</option>
+                                <option value="USD">USD - Dolar Amerika</option>
+                                <option value="EUR">EUR - Euro Eropa</option>
+                                <option value="JPY">JPY - Yen Jepang</option>
+                                <option value="SGD">SGD - Dolar Singapura</option>
+                                <option value="SAR">SAR - Riyal Arab Saudi</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Card Hasil -->
+                    <div class="p-6 bg-gradient-to-br from-indigo-950/80 via-slate-900 to-slate-950 border border-indigo-500/30 rounded-2xl text-center space-y-2 shadow-xl shadow-indigo-950/30">
+                        <p class="text-xs text-indigo-300 font-semibold uppercase tracking-wider">Hasil Konversi Kurs</p>
+                        <h2 id="currencyResult" class="text-3xl md:text-4xl font-black text-emerald-400 tracking-tight">Rp 1.620.000</h2>
+                        <p id="exchangeRateInfo" class="text-xs text-slate-400 pt-1 font-medium">1 USD = 16.200 IDR</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB SUHU ================= -->
+            <div id="tab-suhu" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Nilai Suhu</label>
+                        <input type="number" id="tempInput" value="30" oninput="convertTemperature()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Satuan Asal</label>
+                        <select id="tempFrom" onchange="convertTemperature()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 transition-colors">
+                            <option value="C">Celsius (°C)</option>
+                            <option value="F">Fahrenheit (°F)</option>
+                            <option value="K">Kelvin (K)</option>
+                            <option value="R">Réaumur (°Ré)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-4">
+                    <h3 class="text-xs font-extrabold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-temperature-arrow-up"></i> Konversi Hasil Suhu
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Celsius (°C)</span>
+                            <span id="resC" class="text-slate-100 font-bold text-base">30</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Fahrenheit (°F)</span>
+                            <span id="resF" class="text-slate-100 font-bold text-base">86</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Kelvin (K)</span>
+                            <span id="resK" class="text-slate-100 font-bold text-base">303.15</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Réaumur (°Ré)</span>
+                            <span id="resR" class="text-slate-100 font-bold text-base">24</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB WAKTU ================= -->
+            <div id="tab-waktu" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Besar Waktu</label>
+                        <input type="number" id="timeInput" value="60" min="0" oninput="convertTime()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Satuan Waktu Asal</label>
+                        <select id="timeFrom" onchange="convertTime()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 transition-colors">
+                            <option value="detik">Detik</option>
+                            <option value="menit">Menit</option>
+                            <option value="jam">Jam</option>
+                            <option value="hari">Hari</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-4">
+                    <h3 class="text-xs font-extrabold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Ekuivalensi Waktu
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Detik</span>
+                            <span id="resDetik" class="text-slate-100 font-bold text-base">3600</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Menit</span>
+                            <span id="resMenit" class="text-slate-100 font-bold text-base">60</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Jam</span>
+                            <span id="resJam" class="text-slate-100 font-bold text-base">1</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Hari</span>
+                            <span id="resHari" class="text-slate-100 font-bold text-base">0.04</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB WTC (ZONA WAKTU GLOBAL) ================= -->
+            <div id="tab-wtc" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Pilih Waktu (Jam:Menit)</label>
+                        <input type="time" id="wtcTime" value="12:00" oninput="convertWtc()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Zona Waktu Asal</label>
+                        <select id="wtcZone" onchange="convertWtc()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500">
+                            <option value="7">WIB (Waktu Indonesia Barat - UTC+7)</option>
+                            <option value="8">WITA (Waktu Indonesia Tengah - UTC+8)</option>
+                            <option value="9">WIT (Waktu Indonesia Timur - UTC+9)</option>
+                            <option value="0">UTC / GMT (London - UTC+0)</option>
+                            <option value="-5">New York (EST - UTC-5)</option>
+                            <option value="9">Tokyo (JST - UTC+9)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-4">
+                    <h3 class="text-xs font-extrabold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-earth-asia"></i> Perbandingan Waktu Global (WTC)
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">WIB (UTC+7)</span>
+                            <span id="wtcWib" class="text-slate-100 font-bold text-base">12:00</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">WITA (UTC+8)</span>
+                            <span id="wtcWita" class="text-slate-100 font-bold text-base">13:00</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">WIT (UTC+9)</span>
+                            <span id="wtcWit" class="text-slate-100 font-bold text-base">14:00</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">London (UTC+0)</span>
+                            <span id="wtcLondon" class="text-slate-100 font-bold text-base">05:00</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">New York (UTC-5)</span>
+                            <span id="wtcNewyork" class="text-slate-100 font-bold text-base">00:00</span>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <span class="text-[11px] text-slate-500 block mb-1">Tokyo (UTC+9)</span>
+                            <span id="wtcTokyo" class="text-slate-100 font-bold text-base">14:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB BASIS ANGKA (DENGAN LOGO KHUSUS) ================= -->
+            <div id="tab-basis" class="tab-content space-y-6">
+                <!-- LOGO & HEADER KHUSUS BASIS ANGKA -->
+                <div class="flex items-center gap-3.5 p-4 bg-gradient-to-r from-indigo-950/60 via-slate-900 to-slate-950 border border-indigo-500/30 rounded-2xl shadow-md">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-500/40 shrink-0">
+                        <i class="fa-solid fa-binary"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white leading-snug">Modul Konverter Basis Angka</h3>
+                        <p class="text-xs text-slate-400">Transformasi bilangan Desimal, Biner, Oktal, dan Heksadesimal secara instan.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Masukkan Angka</label>
+                        <input type="text" id="baseInput" value="255" oninput="convertNumberBase()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-mono font-semibold focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Basis Asal</label>
+                        <select id="baseFrom" onchange="convertNumberBase()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500">
+                            <option value="10">Desimal (Basis 10)</option>
+                            <option value="2">Biner (Basis 2)</option>
+                            <option value="16">Heksadesimal (Basis 16)</option>
+                            <option value="8">Oktal (Basis 8)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-3 font-mono">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <span class="text-xs text-slate-400 font-sans">Desimal (10):</span>
+                        <span id="resDec" class="text-indigo-400 font-bold">255</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <span class="text-xs text-slate-400 font-sans">Biner (2):</span>
+                        <span id="resBin" class="text-cyan-400 font-bold">11111111</span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <span class="text-xs text-slate-400 font-sans">Oktal (8):</span>
+                        <span id="resOct" class="text-emerald-400 font-bold">377</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-400 font-sans">Heksadesimal (16):</span>
+                        <span id="resHex" class="text-amber-400 font-bold">FF</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB PANJANG & BERAT ================= -->
+            <div id="tab-fisik" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Kategori</label>
+                        <select id="physCategory" onchange="updatePhysUnits(); convertPhysical();" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500">
+                            <option value="panjang">Panjang</option>
+                            <option value="berat">Berat / Massa</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Nilai</label>
+                        <input type="number" id="physInput" value="100" min="0" oninput="convertPhysical()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Satuan Asal</label>
+                        <select id="physFrom" onchange="convertPhysical()" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 font-semibold focus:outline-none focus:border-indigo-500">
+                            <!-- Diisi dinamis via JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="p-5 bg-slate-950/60 border border-slate-800 rounded-2xl space-y-4">
+                    <h3 class="text-xs font-extrabold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-scale-balanced"></i> Hasil Konversi Satuan Fisik
+                    </h3>
+                    <div id="physResultContainer" class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <!-- Hasil dinamis -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= TAB QR CODE ================= -->
+            <div id="tab-qr" class="tab-content space-y-6 text-center">
+                <div class="space-y-4 max-w-lg mx-auto text-left">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Teks atau URL Tautan untuk QR Code</label>
+                        <input type="text" id="qrText" value="https://github.com" oninput="generateQRCode()" placeholder="Ketik teks atau URL..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 text-sm focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div class="p-6 bg-slate-950/60 border border-slate-800 rounded-2xl inline-block shadow-inner">
+                    <div class="bg-white p-3 rounded-xl inline-block shadow-md">
+                        <img id="qrImage" src="" alt="QR Code" class="w-44 h-44 object-contain mx-auto">
+                    </div>
+                    <div class="mt-4">
+                        <a id="downloadQrBtn" href="#" download="qrcode.png" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl transition-all shadow-md">
+                            <i class="fa-solid fa-download"></i> Unduh Gambar QR Code
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Autentikasi (Login & Register) -->
+    <div id="authModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-3xl p-6 md:p-8 shadow-2xl shadow-slate-950 space-y-5 relative scale-95 transition-transform duration-300" id="authModalBox">
+            
+            <!-- Switcher Login/Register -->
+            <div class="flex bg-slate-950 p-1.5 rounded-2xl border border-slate-800 relative">
+                <button onclick="switchAuthTab('login')" id="tabAuthLogin" class="w-1/2 text-center py-2.5 rounded-xl font-bold text-xs text-indigo-400 bg-indigo-500/10 transition-all duration-200">
+                    Masuk Akun
+                </button>
+                <button onclick="switchAuthTab('register')" id="tabAuthRegister" class="w-1/2 text-center py-2.5 rounded-xl font-bold text-xs text-slate-400 hover:text-slate-200 transition-all duration-200">
+                    Buat Akun
+                </button>
+                <button onclick="closeAuthModal()" class="absolute -top-3 -right-3 w-8 h-8 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 rounded-full flex items-center justify-center shadow-lg transition-all"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+
+            <!-- FORM LOGIN -->
+            <form id="formLogin" onsubmit="handleLogin(event)" class="auth-tab active space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Username Anda</label>
+                    <input type="text" id="loginUsername" required placeholder="Masukkan username terdaftar" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Kata Sandi</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-600/30 transition-all duration-200 active:scale-[0.99] mt-2">
+                    Masuk Sekarang
+                </button>
+            </form>
+
+            <!-- FORM BUAT AKUN (REGISTER) -->
+            <form id="formRegister" onsubmit="handleRegister(event)" class="auth-tab space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Pilih Username</label>
+                    <input type="text" id="regUsername" required placeholder="Buat username unik" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Kata Sandi</label>
+                    <input type="password" id="regPassword" required placeholder="Minimal 4 karakter" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">Konfirmasi Kata Sandi</label>
+                    <input type="password" id="regPasswordConfirm" required placeholder="Ulangi kata sandi" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors">
+                </div>
+                <button type="submit" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition-all duration-200 active:scale-[0.99] mt-2">
+                    Daftar Akun Baru
+                </button>
+            </form>
+
+            <p id="authMessage" class="text-xs text-rose-400 text-center font-semibold bg-rose-500/10 border border-rose-500/20 py-2 rounded-xl hidden"></p>
+        </div>
+    </div>
+
+    <!-- Footer Credit Pembuat -->
+    <footer class="mt-8 text-xs text-slate-400 text-center space-y-3">
+        <div class="p-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl max-w-lg mx-auto shadow-lg backdrop-blur-md">
+            <p class="font-bold text-slate-200 mb-1 flex items-center justify-center gap-1.5"><i class="fa-solid fa-user-shield text-indigo-400"></i> Dibuat oleh Danzy</p>
+            <p class="text-[11px] text-slate-400 leading-relaxed font-medium">
+                Super-Converter Digital Platform
+            </p>
+        </div>
+        <p class="text-slate-500 text-[11px] font-medium">⚡ Super-Converter &copy; 2026 • Danzy.</p>
+    </footer>
+
+    <!-- Logic JavaScript & Real-Time Clock Engine -->
+    <script>
+        const exchangeRates = {
+            USD: 1.0,
+            IDR: 16200.0,
+            EUR: 0.92,
+            JPY: 155.0,
+            SGD: 1.35,
+            SAR: 3.75
+        };
+
+        // Real-Time Clock Function
+        function updateRealtimeClock() {
+            const now = new Date();
+            const optionsTime = { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            const optionsDate = { timeZone: 'Asia/Jakarta', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
+            
+            const timeString = new Intl.DateTimeFormat('id-ID', optionsTime).format(now);
+            const dateString = new Intl.DateTimeFormat('id-ID', optionsDate).format(now);
+            
+            const clockEl = document.getElementById('realtimeClockText');
+            if (clockEl) {
+                clockEl.innerText = `${dateString} • ${timeString} WIB`;
+            }
+        }
+        setInterval(updateRealtimeClock, 1000);
+
+        // Switch Main Tabs Logic with smooth transition styling
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-indigo-400', 'bg-indigo-500/10', 'border', 'border-indigo-500/20', 'font-bold');
+                btn.classList.add('text-slate-400', 'font-semibold');
+            });
+
+            setTimeout(() => {
+                document.getElementById(`tab-${tabName}`).classList.add('active');
+            }, 50);
+
+            const activeBtn = document.getElementById(`btn-${tabName}`);
+            activeBtn.classList.remove('text-slate-400', 'font-semibold');
+            activeBtn.classList.add('text-indigo-400', 'bg-indigo-500/10', 'border', 'border-indigo-500/20', 'font-bold');
+        }
+
+        // --- SISTEM AUTHENTICATION (REGISTER & LOGIN) ---
+        function getRegisteredUsers() {
+            return JSON.parse(localStorage.getItem('sc_users_db') || '{}');
+        }
+
+        function switchAuthTab(type) {
+            document.querySelectorAll('.auth-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById('authMessage').classList.add('hidden');
+            
+            const tabLogin = document.getElementById('tabAuthLogin');
+            const tabRegister = document.getElementById('tabAuthRegister');
+
+            if (type === 'login') {
+                document.getElementById('formLogin').classList.add('active');
+                tabLogin.classList.add('text-indigo-400', 'bg-indigo-500/10');
+                tabLogin.classList.remove('text-slate-400');
+                tabRegister.classList.remove('text-indigo-400', 'bg-indigo-500/10');
+                tabRegister.classList.add('text-slate-400');
+            } else {
+                document.getElementById('formRegister').classList.add('active');
+                tabRegister.classList.add('text-indigo-400', 'bg-indigo-500/10');
+                tabRegister.classList.remove('text-slate-400');
+                tabLogin.classList.remove('text-indigo-400', 'bg-indigo-500/10');
+                tabLogin.classList.add('text-slate-400');
+            }
+        }
+
+        function openAuthModal(defaultTab = 'login') {
+            switchAuthTab(defaultTab);
+            const modal = document.getElementById('authModal');
+            const box = document.getElementById('authModalBox');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('authModal');
+            const box = document.getElementById('authModalBox');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function showAuthMessage(msg) {
+            const msgEl = document.getElementById('authMessage');
+            msgEl.innerText = msg;
+            msgEl.classList.remove('hidden');
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const user = document.getElementById('regUsername').value.trim();
+            const pass = document.getElementById('regPassword').value;
+            const passConfirm = document.getElementById('regPasswordConfirm').value;
+
+            if (pass !== passConfirm) {
+                showAuthMessage("Kata sandi tidak cocok!");
+                return;
+            }
+
+            const users = getRegisteredUsers();
+            if (users[user]) {
+                showAuthMessage("Username sudah terdaftar! Silakan login.");
+                return;
+            }
+
+            users[user] = pass;
+            localStorage.setItem('sc_users_db', JSON.stringify(users));
+            
+            localStorage.setItem('sc_user', user);
+            checkAuth();
+            closeAuthModal();
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUsername').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+
+            const users = getRegisteredUsers();
+
+            if (!users[user]) {
+                showAuthMessage("Akun tidak ditemukan. Silakan daftar!");
+                return;
+            }
+
+            if (users[user] !== pass) {
+                showAuthMessage("Kata sandi salah!");
+                return;
+            }
+
+            localStorage.setItem('sc_user', user);
+            checkAuth();
+            closeAuthModal();
+        }
+
+        function checkAuth() {
+            const user = localStorage.getItem('sc_user');
+            const lockedState = document.getElementById('lockedState');
+            const appContent = document.getElementById('appContent');
+            const guestButtons = document.getElementById('guestButtons');
+            const userProfile = document.getElementById('userProfile');
+
+            if (user) {
+                lockedState.classList.add('hidden');
+                appContent.classList.remove('hidden');
+                
+                guestButtons.classList.add('hidden');
+                userProfile.classList.remove('hidden');
+                document.getElementById('profileName').innerText = user;
+            } else {
+                lockedState.classList.remove('hidden');
+                appContent.classList.add('hidden');
+                
+                guestButtons.classList.remove('hidden');
+                userProfile.classList.add('hidden');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('sc_user');
+            checkAuth();
+        }
+
+        // Logic Konversi Mata Uang
+        function convertCurrency() {
+            const amount = parseFloat(document.getElementById('currencyAmount').value) || 0;
+            const from = document.getElementById('currFrom').value;
+            const to = document.getElementById('currTo').value;
+
+            const amountInUSD = amount / exchangeRates[from];
+            const result = amountInUSD * exchangeRates[to];
+
+            const formatter = new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: to,
+                maximumFractionDigits: 2
+            });
+
+            document.getElementById('currencyResult').innerText = formatter.format(result);
+            const singleRate = (1 / exchangeRates[from]) * exchangeRates[to];
+            document.getElementById('exchangeRateInfo').innerText = `1 ${from} = ${singleRate.toLocaleString('id-ID', { maximumFractionDigits: 4 })} ${to}`;
+        }
+
+        function swapCurrency() {
+            const fromSelect = document.getElementById('currFrom');
+            const toSelect = document.getElementById('currTo');
+            const temp = fromSelect.value;
+            fromSelect.value = toSelect.value;
+            toSelect.value = temp;
+            convertCurrency();
+        }
+
+        // Logic Gambar
+        let loadedImage = null;
+        let originalFileName = "";
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            originalFileName = file.name.split('.')[0];
+            document.getElementById('fileName').innerText = file.name;
+            document.getElementById('fileSize').innerText = (file.size / 1024).toFixed(1) + " KB";
+            document.getElementById('imagePreviewContainer').classList.remove('hidden');
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                loadedImage = new Image();
+                loadedImage.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function convertImage() {
+            if (!loadedImage) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = loadedImage.width;
+            canvas.height = loadedImage.height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(loadedImage, 0, 0);
+
+            const format = document.getElementById('targetFormat').value;
+            const quality = parseFloat(document.getElementById('qualityRange').value);
+            const ext = format.split('/')[1];
+
+            const convertedDataUrl = canvas.toDataURL(format, quality);
+
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = convertedDataUrl;
+            downloadLink.download = `${originalFileName}_converted.${ext}`;
+
+            document.getElementById('downloadArea').classList.remove('hidden');
+        }
+
+        // Logic Unit Data
+        function convertDataSize() {
+            const val = parseFloat(document.getElementById('dataInput').value) || 0;
+            const unit = document.getElementById('unitFrom').value;
+
+            let bytes = 0;
+            if (unit === 'KB') bytes = val * 1024;
+            if (unit === 'MB') bytes = val * 1024 * 1024;
+            if (unit === 'GB') bytes = val * 1024 * 1024 * 1024;
+            if (unit === 'TB') bytes = val * 1024 * 1024 * 1024 * 1024;
+
+            document.getElementById('resKB').innerText = (bytes / 1024).toLocaleString();
+            document.getElementById('resMB').innerText = (bytes / (1024 ** 2)).toLocaleString();
+            document.getElementById('resGB').innerText = (bytes / (1024 ** 3)).toLocaleString();
+            document.getElementById('resTB').innerText = (bytes / (1024 ** 4)).toLocaleString();
+        }
+
+        // Logic Teks
+        function analyzeText() {
+            const text = document.getElementById('textInput').value;
+            document.getElementById('charCount').innerText = text.length;
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            document.getElementById('wordCount').innerText = words;
+        }
+
+        function transformText(type) {
+            const textInput = document.getElementById('textInput');
+            if (type === 'upper') textInput.value = textInput.value.toUpperCase();
+            if (type === 'lower') textInput.value = textInput.value.toLowerCase();
+            analyzeText();
+        }
+
+        function downloadTextFile() {
+            const text = document.getElementById('textInput').value;
+            if (!text) return alert("Ketik teks terlebih dahulu!");
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "hasil_konversi_teks.txt";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ================= LOGIC FITUR LAIN & WTC =================
+
+        // 1. Suhu
+        function convertTemperature() {
+            const val = parseFloat(document.getElementById('tempInput').value) || 0;
+            const from = document.getElementById('tempFrom').value;
+            let celsius = 0;
+
+            if (from === 'C') celsius = val;
+            else if (from === 'F') celsius = (val - 32) * 5/9;
+            else if (from === 'K') celsius = val - 273.15;
+            else if (from === 'R') celsius = val * 5/4;
+
+            const f = celsius * 9/5 + 32;
+            const k = celsius + 273.15;
+            const r = celsius * 4/5;
+
+            document.getElementById('resC').innerText = celsius.toFixed(2);
+            document.getElementById('resF').innerText = f.toFixed(2);
+            document.getElementById('resK').innerText = k.toFixed(2);
+            document.getElementById('resR').innerText = r.toFixed(2);
+        }
+
+        // 2. Waktu
+        function convertTime() {
+            const val = parseFloat(document.getElementById('timeInput').value) || 0;
+            const from = document.getElementById('timeFrom').value;
+            let seconds = 0;
+
+            if (from === 'detik') seconds = val;
+            else if (from === 'menit') seconds = val * 60;
+            else if (from === 'jam') seconds = val * 3600;
+            else if (from === 'hari') seconds = val * 86400;
+
+            document.getElementById('resDetik').innerText = seconds.toLocaleString();
+            document.getElementById('resMenit').innerText = (seconds / 60).toLocaleString(undefined, {maximumFractionDigits: 2});
+            document.getElementById('resJam').innerText = (seconds / 3600).toLocaleString(undefined, {maximumFractionDigits: 2});
+            document.getElementById('resHari').innerText = (seconds / 86400).toLocaleString(undefined, {maximumFractionDigits: 4});
+        }
+
+        // 3. WTC (World Timezone Converter)
+        function convertWtc() {
+            const timeStr = document.getElementById('wtcTime').value || "12:00";
+            const sourceOffset = parseInt(document.getElementById('wtcZone').value);
+
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            let totalMinutesUTC = (hours * 60 + minutes) - (sourceOffset * 60);
+            totalMinutesUTC = (totalMinutesUTC % 1440 + 1440) % 1440;
+
+            function formatTime(offsetMinutes) {
+                let targetMins = (totalMinutesUTC + offsetMinutes + 1440) % 1440;
+                let h = Math.floor(targetMins / 60);
+                let m = targetMins % 60;
+                return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+            }
+
+            document.getElementById('wtcWib').innerText = formatTime(7 * 60);
+            document.getElementById('wtcWita').innerText = formatTime(8 * 60);
+            document.getElementById('wtcWit').innerText = formatTime(9 * 60);
+            document.getElementById('wtcLondon').innerText = formatTime(0 * 60);
+            document.getElementById('wtcNewyork').innerText = formatTime(-5 * 60);
+            document.getElementById('wtcTokyo').innerText = formatTime(9 * 60);
+        }
+
+        // 4. Basis Angka
+        function convertNumberBase() {
+            const val = document.getElementById('baseInput').value.trim();
+            const fromBase = parseInt(document.getElementById('baseFrom').value);
+            
+            let dec = parseInt(val, fromBase);
+            if (isNaN(dec)) {
+                document.getElementById('resDec').innerText = "Format Salah";
+                document.getElementById('resBin').innerText = "-";
+                document.getElementById('resOct').innerText = "-";
+                document.getElementById('resHex').innerText = "-";
+                return;
+            }
+
+            document.getElementById('resDec').innerText = dec.toString(10);
+            document.getElementById('resBin').innerText = dec.toString(2);
+            document.getElementById('resOct').innerText = dec.toString(8);
+            document.getElementById('resHex').innerText = dec.toString(16).toUpperCase();
+        }
+
+        // 5. Panjang & Berat
+        const physicalUnits = {
+            panjang: { m: 1, km: 1000, cm: 0.01, mm: 0.001, inch: 0.0254, kaki: 0.3048 },
+            berat: { g: 1, kg: 1000, mg: 0.001, ons: 100, pon: 453.592 }
+        };
+
+        function updatePhysUnits() {
+            const cat = document.getElementById('physCategory').value;
+            const select = document.getElementById('physFrom');
+            select.innerHTML = '';
+            for (let unit in physicalUnits[cat]) {
+                let opt = document.createElement('option');
+                opt.value = unit;
+                opt.text = unit.toUpperCase();
+                select.appendChild(opt);
+            }
+        }
+
+        function convertPhysical() {
+            const cat = document.getElementById('physCategory').value;
+            const val = parseFloat(document.getElementById('physInput').value) || 0;
+            const from = document.getElementById('physFrom').value;
+            const units = physicalUnits[cat];
+
+            let baseVal = val * (units[from] || 1);
+            let container = document.getElementById('physResultContainer');
+            container.innerHTML = '';
+
+            for (let u in units) {
+                let converted = baseVal / units[u];
+                let div = document.createElement('div');
+                div.className = "p-3 bg-slate-900/80 rounded-xl border border-slate-800";
+                div.innerHTML = `<span class="text-[11px] text-slate-500 block mb-1">${u.toUpperCase()}</span><span class="text-slate-100 font-bold text-base">${converted.toLocaleString(undefined, {maximumFractionDigits: 4})}</span>`;
+                container.appendChild(div);
+            }
+        }
+
+        // 6. QR Code
+        function generateQRCode() {
+            const text = document.getElementById('qrText').value.trim() || "https://github.com";
+            const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
+            document.getElementById('qrImage').src = apiUrl;
+            document.getElementById('downloadQrBtn').href = apiUrl;
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updateRealtimeClock();
+            convertDataSize();
+            convertCurrency();
+            convertTemperature();
+            convertTime();
+            convertWtc();
+            convertNumberBase();
+            updatePhysUnits();
+            convertPhysical();
+            generateQRCode();
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
